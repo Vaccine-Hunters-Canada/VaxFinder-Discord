@@ -17,7 +17,7 @@ options = []
 options.append(create_option(name="postal", description="THE FIRST 3 LETTERS of your postal code.",
                              option_type=3, required=True))
 
-@slash.slash(name="find", description="Find the closest available Vaccine appointment, with the fewest requirements",
+@slash.slash(name="find", description="Find the closest available vaccine appointment, with the fewest requirements",
             options=options)
 async def pog(ctx, postal: str):
     if not (0 < len(postal) < 4):
