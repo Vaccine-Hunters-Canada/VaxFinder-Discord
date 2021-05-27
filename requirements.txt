@@ -2,3 +2,4 @@ discord-py-slash-command==1.1.2
 discord.py==1.7.2
 keyring==23.0.1
 requests==2.25.1
+pgeocode==0.3.0
