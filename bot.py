@@ -43,11 +43,12 @@ def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
 
         if len(appointment.requirements) > 0:
             if len(appointment.requirements) == 1:
-                if appointment.requirements[0].name == "18+ in Specific Postal Codes": # This one doesn't really matter
+                if appointment.requirements[0].name == "HotSpot": # This one doesn't really matter
                     pass
                 else:
                     score += 100
-            score += 100
+            else:
+                score += 100
 
 
         appointments_scored.append((appointment, score))
@@ -72,9 +73,9 @@ async def pog(ctx, postal: str):
         return
     await ctx.defer()
     appointments = get_appointments_from_postal(postal)
-    best_appointment = get_appointment_scores(postal, appointments)[0][0]
+    #best_appointment = get_appointment_scores(postal, appointments)[0][0]
     await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
-    await ctx.send("**<@%d>, Here is the closest and most accessible appointment found**:" % ctx.author.id,
+    await ctx.send("**<@%d>, Here is the closest appointment found**:" % ctx.author.id,
              embed=appointments[0].format_to_embed())
 
 client.run(keyring.get_password("VaxFinderDiscord", "BotToken"))
