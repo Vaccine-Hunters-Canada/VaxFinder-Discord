@@ -72,9 +72,16 @@ async def pog(ctx, postal: str):
                        delete_after=8.0)
         return
     await ctx.defer()
+
     appointments = get_appointments_from_postal(postal)
+    # Disabled due to too many data inaccuracies in appointment database to use reliably
     #best_appointment = get_appointment_scores(postal, appointments)[0][0]
     await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
+
+    if not appointments:
+        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code!**" % ctx.author.id)
+        return
+
     await ctx.send("**<@%d>, Here is the closest appointment found**:" % ctx.author.id,
              embed=appointments[0].format_to_embed())
 

@@ -3,6 +3,11 @@ import json
 from finderbot.models import *
 
 def get_appointments_from_postal(postal: str):
+    '''
+    Finds appointments, using the VaxFinder API, near a postal code.
+    :param postal: The first 3 letters of a postal code as a string.
+    :return: A list of VaxAppointments, or None if none are found
+    '''
     r = requests.get("https://vax-availability-api.azurewebsites.net/api/v1/vaccine-locations"
                         "?postal_code=%s&include_empty=false" % postal)
     appointments = json.loads(r.text)
