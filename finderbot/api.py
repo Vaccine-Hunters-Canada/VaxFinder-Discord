@@ -2,7 +2,7 @@ import requests
 import json
 from finderbot.models import *
 
-def get_appointments_from_postal(postal: str):
+def get_appointments_from_postal(postal: str, dose=1):
     '''
     Finds appointments, using the VaxFinder API, near a postal code.
     :param postal: The first 3 letters of a postal code as a string.
@@ -33,6 +33,18 @@ def get_appointments_from_postal(postal: str):
             loc.url = appointment["url"]
 
         for availability in appointment["vaccineAvailabilities"]:
+            if availability["tags"]:
+                print(availability["tags"])
+                tags = availability["tags"].split(',')
+                if "dose2" in tags:
+                    if dose == 1:
+                        continue
+                else:
+                    if dose == 2:
+                        continue
+            else:
+                if dose == 2:
+                    continue
             requirements = []
             reqdata = availability["requirements"]
             for requirement in reqdata:

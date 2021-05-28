@@ -1,6 +1,6 @@
 import discord
 from discord_slash import SlashCommand
-from discord_slash.utils.manage_commands import create_option
+from discord_slash.utils.manage_commands import create_option, create_choice
 import keyring
 import asyncio
 from math import log
@@ -64,16 +64,20 @@ options = []
 options.append(create_option(name="postal", description="THE FIRST 3 LETTERS of your postal code.",
                              option_type=3, required=True))
 
+dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=2)]
+options.append(create_option(name="dose", description="Dose # you are looking for", option_type=4, required=True,
+                             choices=dose_choices))
+
 @slash.slash(name="find", description="Find the closest available vaccine appointment, with the fewest requirements",
             options=options)
-async def pog(ctx, postal: str):
+async def pog(ctx, postal: str, dose: int):
     if not (0 < len(postal) < 4):
         await ctx.send("❗ <@%d>, please only enter the *first 3 digits* of your postal code!" % ctx.author.id,
                        delete_after=8.0)
         return
     await ctx.defer()
 
-    appointments = get_appointments_from_postal(postal)
+    appointments = get_appointments_from_postal(postal, dose=dose)
     # Disabled due to too many data inaccuracies in appointment database to use reliably
     #best_appointment = get_appointment_scores(postal, appointments)[0][0]
     await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
