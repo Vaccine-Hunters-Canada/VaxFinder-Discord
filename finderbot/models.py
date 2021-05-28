@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 from discord import Embed
+import datetime
 
 @dataclass
 class Requirement:
@@ -25,12 +26,21 @@ class Location:
 
 class VaxAppointment():
 
-    def __init__(self, location: Location, requirements: List[Requirement], vaccine: int, amount: int):
+    def __init__(self, location: Location, requirements: List[Requirement], vaccine: int, amount: int,
+                 dates: List[datetime.datetime]):
         self.location = location
         self.requirements = requirements
         self.vaccine = vaccine
         self.amount = amount
+        self.dates = dates
         self.vaccinecodes = {1: "Pfizer", 2: "Moderna"}
+
+    def __eq__(self, other):
+        if not isinstance(other, VaxAppointment):
+            raise ValueError("Can't compare non-VaxAppointment classes")
+
+        return self.__dict__ == other.__dict__
+
 
     def format_to_embed(self):
         embed = Embed(title=self.location.name)
@@ -56,10 +66,16 @@ class VaxAppointment():
         if address.postal:
             embed.description += address.postal + "\n\n"
 
+        embed.description += "Dates available: %s\n\n" % "; ".join([date.strftime("%Y-%m-%d") for date in self.dates])
+
         if self.location.phone:
             embed.description += "**Call**: %s\n" % self.location.phone
         if self.location.url:
             embed.description += "**Booking URL**: %s" % self.location.url
+
+        embed.set_footer(text="This information is gathered both automatically and via volunteers and is not "
+                                "guaranteed to be accurate. Please verify yourself via the provided booking options to "
+                                "ensure these appointments are available to you.")
 
         return embed
 

@@ -52,6 +52,19 @@ def get_appointments_from_postal(postal: str, dose=1):
 
             vaccine = availability["vaccine"]
             amount = availability["numberTotal"]
-            vaxappointments.append(VaxAppointment(loc, requirements, vaccine, amount))
+            date = datetime.datetime.strptime(availability["date"].split("T")[0], "%Y-%m-%d")
+
+            # Check if this same appointment exists with another date - if so, just add the date to that appointment
+            seen = False
+            for idx, appointment in enumerate(vaxappointments):
+                adates = appointment.dates
+                if VaxAppointment(loc, requirements, vaccine, amount, adates) == appointment:
+                    nappointment = appointment
+                    nappointment.dates.append(date)
+                    vaxappointments[idx] = nappointment
+                    seen = True
+
+            if not seen:
+                vaxappointments.append(VaxAppointment(loc, requirements, vaccine, amount, [date]))
 
     return vaxappointments if vaxappointments else None
