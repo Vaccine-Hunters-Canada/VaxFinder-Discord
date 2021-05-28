@@ -68,9 +68,10 @@ dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=
 options.append(create_option(name="dose", description="Dose # you are looking for", option_type=4, required=True,
                              choices=dose_choices))
 
+
 @slash.slash(name="find", description="Find the closest available vaccine appointment, with the fewest requirements",
             options=options)
-async def pog(ctx, postal: str, dose: int):
+async def find(ctx, postal: str, dose: int):
     if not (0 < len(postal) < 4):
         await ctx.send("❗ <@%d>, please only enter the *first 3 digits* of your postal code!" % ctx.author.id,
                        delete_after=8.0)
@@ -88,5 +89,40 @@ async def pog(ctx, postal: str, dose: int):
 
     await ctx.send("**<@%d>, Here is the closest appointment found**:" % ctx.author.id,
              embed=appointments[0].format_to_embed())
+
+@slash.slash(name="findall", description="Find all vaccine appointments nearby", options=options)
+async def findall(ctx, postal:str, dose: int):
+    if not (0 < len(postal) < 4):
+        await ctx.send("❗ <@%d>, please only enter the *first 3 digits* of your postal code!" % ctx.author.id,
+                       delete_after=8.0)
+        return
+    await ctx.defer()
+
+    appointments = get_appointments_from_postal(postal, dose=dose)
+    await asyncio.sleep(3)
+
+    if not appointments:
+        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code!**" % ctx.author.id)
+        return
+
+    await ctx.send("<@%d>, sending you available appointments via direct message!" % ctx.author.id)
+    user = ctx.author
+    appointments_accessible = [appointment for appointment in appointments if len(appointment.requirements) == 0]
+    if appointments_accessible:
+        await user.send(
+            "\U0001F537 **Here are locations with no known elgibility requirements "
+            "(may not be accurate - check yourself via phone or website):**")
+        for appointment in appointments_accessible:
+            await user.send(embed=appointment.format_to_embed())
+        if len(appointments_accessible) != len(appointments):
+            await user.send(
+                "\U0001F536 **Here are all other available appointments (locations may show twice, as "
+                "doses are allocated differently based on elgibility):**")
+
+        appointments = [appointment for appointment in appointments if appointment not in appointments_accessible]
+
+    for appointment in appointments:
+        await user.send(embed=appointment.format_to_embed())
+
 
 client.run(keyring.get_password("VaxFinderDiscord", "BotToken"))
