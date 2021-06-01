@@ -3,6 +3,8 @@ from typing import List
 from discord import Embed
 import datetime
 
+from finderbot import tools
+
 @dataclass
 class Requirement:
     name: str
@@ -43,7 +45,12 @@ class VaxAppointment():
 
 
     def format_to_embed(self):
-        embed = Embed(title=self.location.name)
+        color = tools.get_color_from_name(self.location.name)
+        if color:
+            embed_color = int(color, 16)
+        else:
+            embed_color = 0
+        embed = Embed(title=self.location.name, color=embed_color)
         embed.description = "**Vaccine**\U0001F489: %s\n" % self.vaccinecodes[self.vaccine]
         embed.description += "**Reported vaccines available (may not be accurate):** %d\n" % (self.amount)
         if self.requirements:
@@ -73,9 +80,15 @@ class VaxAppointment():
         if self.location.url:
             embed.description += "**Booking URL**: %s" % self.location.url
 
+        img = tools.get_logo_from_name(self.location.name)
+        if img:
+            embed.set_thumbnail(url=img)
+
+
         embed.set_footer(text="This information is gathered both automatically and via volunteers and is not "
                                 "guaranteed to be accurate. Please verify yourself via the provided booking options to "
                                 "ensure these appointments are available to you.")
+
 
         return embed
 

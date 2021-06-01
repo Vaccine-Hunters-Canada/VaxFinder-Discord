@@ -28,7 +28,7 @@ def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
         distance = gd.query_postal_code(origin, appointment.location.address.postal[:3])
         if distance > 100:
             continue
-
+        distance = 0
 
         # Magic equation to modify score change based on # of vaccines left
         try:
@@ -39,8 +39,7 @@ def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
             score_supply = 0
 
         # Now we'll use some more magic equations to calculate score...
-        # Disabling supply score modifications for now, too unreliable due to data
-        #score = (1/900*(distance**3)) + score_supply
+        score = (1/900*(distance**3)) + score_supply
 
         score = (1/900*(distance**3))
 
@@ -82,14 +81,13 @@ async def find(ctx, postal: str, dose: int):
     await ctx.defer()
 
     appointments = get_appointments_from_postal(postal, dose=dose)
-    best_appointment = get_appointment_scores(postal, appointments)[0][0]
     await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
 
     if not appointments:
         await ctx.send("**Sorry <@%d> - no appointments were found near your postal code!**" % ctx.author.id)
         return
 
-
+    best_appointment = get_appointment_scores(postal, appointments)[0][0]
     await ctx.send("**<@%d>, Here is the closest appointment found**:" % ctx.author.id,
              embed=best_appointment.format_to_embed())
 
@@ -102,7 +100,6 @@ async def findall(ctx, postal:str, dose: int):
     await ctx.defer()
 
     appointments = get_appointments_from_postal(postal, dose=dose)
-    await asyncio.sleep(3)
 
     if not appointments:
         await ctx.send("**Sorry <@%d> - no appointments were found near your postal code!**" % ctx.author.id)
