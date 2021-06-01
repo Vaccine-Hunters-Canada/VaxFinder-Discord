@@ -35,7 +35,7 @@ class VaxAppointment():
         self.vaccine = vaccine
         self.amount = amount
         self.dates = dates
-        self.vaccinecodes = {1: "Pfizer", 2: "Moderna"}
+        self.vaccinecodes = {1: "Unknown", 3: "Pfizer", 4: "Moderna", 5: "AstraZeneca"}
 
     def __eq__(self, other):
         if not isinstance(other, VaxAppointment):
