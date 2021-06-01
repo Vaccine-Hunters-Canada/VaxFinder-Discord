@@ -1,6 +1,9 @@
 import requests
 import json
+import datetime
+
 from finderbot.models import *
+
 
 def get_appointments_from_postal(postal: str, dose=1):
     '''
@@ -8,8 +11,9 @@ def get_appointments_from_postal(postal: str, dose=1):
     :param postal: The first 3 letters of a postal code as a string.
     :return: A list of VaxAppointments, or None if none are found
     '''
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
     r = requests.get("https://vax-availability-api.azurewebsites.net/api/v1/vaccine-locations"
-                        "?postal_code=%s&include_empty=false" % postal)
+                        "?postal_code=%s&include_empty=false&min_date=%s" % (postal, today))
     appointments = json.loads(r.text)
     vaxappointments = []
     for appointment in appointments:
