@@ -84,14 +84,15 @@ async def find(ctx, postal: str, dose: int):
     await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
 
     if not appointments:
-        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code!**" % ctx.author.id)
+        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %
+                       (ctx.author.id, postal))
         return
 
     best_appointment = get_appointment_scores(postal, appointments)[0][0]
-    await ctx.send("**<@%d>, Here is the closest appointment found**:" % ctx.author.id,
+    await ctx.send("**<@%d>, Here is the closest and most accessible appointment found**:" % ctx.author.id,
              embed=best_appointment.format_to_embed())
 
-@slash.slash(name="findall", description="Find all vaccine appointments nearby", options=options)
+@slash.slash(name="findall", description="Find all vaccine appointments nearby and send via DM", options=options)
 async def findall(ctx, postal:str, dose: int):
     if not (0 < len(postal) < 4):
         await ctx.send("❗ <@%d>, please only enter the *first 3 digits* of your postal code!" % ctx.author.id,
@@ -102,7 +103,8 @@ async def findall(ctx, postal:str, dose: int):
     appointments = get_appointments_from_postal(postal, dose=dose)
 
     if not appointments:
-        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code!**" % ctx.author.id)
+        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %
+                       (ctx.author.id, postal))
         return
 
     await ctx.send("<@%d>, sending you available appointments via direct message!" % ctx.author.id)
@@ -110,8 +112,8 @@ async def findall(ctx, postal:str, dose: int):
     appointments_accessible = [appointment for appointment in appointments if len(appointment.requirements) == 0]
     if appointments_accessible:
         await user.send(
-            "\U0001F537 **Here are locations with no known elgibility requirements "
-            "(may not be accurate - check yourself via phone or website):**")
+            "\U0001F537 **Here are locations with no known elgibility requirements (12+/18+, "
+            "may not be accurate - check yourself via phone or website):**")
         for appointment in appointments_accessible:
             await user.send(embed=appointment.format_to_embed())
         if len(appointments_accessible) != len(appointments):

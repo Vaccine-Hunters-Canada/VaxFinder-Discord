@@ -87,7 +87,7 @@ class VaxAppointment():
 
         embed.set_footer(text="This information is gathered both automatically and via volunteers and is not "
                                 "guaranteed to be accurate. Please verify yourself via the provided booking options to "
-                                "ensure these appointments are available to you.")
+                                "ensure these appointments are available to you and requirements are accurate.")
 
 
         return embed
