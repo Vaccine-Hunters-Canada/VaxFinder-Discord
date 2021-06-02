@@ -84,10 +84,15 @@ class VaxAppointment():
         if img:
             embed.set_thumbnail(url=img)
 
-
-        embed.set_footer(text="This information is gathered both automatically and via volunteers and is not "
-                                "guaranteed to be accurate. Please verify yourself via the provided booking options to "
-                                "ensure these appointments are available to you and requirements are accurate.")
+        footer = "This information is gathered both automatically and via volunteers and is not " \
+                 "guaranteed to be accurate. Please verify yourself via the provided booking options to " \
+                 "ensure these appointments are available to you and requirements are correct."
+        if self.location.address.province.lower() == "ontario":
+            footer += "\nBe sure to check out the provincial booking site as well: https://vaccine.covaxonbooking.ca/"
+        elif self.location.address.province.lower() == "alberta":
+            footer += "\nBe sure to check out the provincial booking site: " \
+                      "https://www.albertahealthservices.ca/topics/page17295.aspx."
+        embed.set_footer(text=footer)
 
 
         return embed

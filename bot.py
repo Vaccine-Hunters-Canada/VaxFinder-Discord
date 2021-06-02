@@ -94,7 +94,7 @@ async def find(ctx, postal: str, dose: int):
         await ctx.author.send("**<@%d>, Here is the closest and most accessible appointment found**:" % ctx.author.id,
                 embed=best_appointment.format_to_embed())
     except discord.errors.Forbidden:
-        await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent."
+        await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
                  "Please enable this to use the bot." % ctx.author.id)
 
 @slash.slash(name="findall", description="Find all vaccine appointments nearby and send via DM", options=options)
@@ -112,7 +112,8 @@ async def findall(ctx, postal:str, dose: int):
                        (ctx.author.id, postal), delete_after=8.0)
         return
 
-    await ctx.send("<@%d>, sending you available appointments via direct message!" % ctx.author.id)
+    await ctx.send("<@%d>, sending you available appointments via direct message!" % ctx.author.id,
+                   delete_after=8.0)
     user = ctx.author
     appointments_accessible = [appointment for appointment in appointments if len(appointment.requirements) == 0]
     try:
