@@ -66,7 +66,7 @@ options = []
 options.append(create_option(name="postal", description="THE FIRST 3 LETTERS of your postal code.",
                              option_type=3, required=True))
 
-dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=2), create_choice(name="3", value=3c)]
+dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=2), create_choice(name="3", value=3)]
 options.append(create_option(name="dose", description="Dose # you are looking for", option_type=4, required=True,
                              choices=dose_choices))
 
