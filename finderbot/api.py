@@ -4,6 +4,7 @@ import datetime
 
 from finderbot.models import *
 
+vaccines = ["Pfizer", "Moderna"]
 
 def get_appointments_from_postal(postal: str, dose=1):
     '''
@@ -19,6 +20,7 @@ def get_appointments_from_postal(postal: str, dose=1):
     for appointment in appointments:
         address = Region()
         addressdata = appointment["address"]
+        attributes = ["line1", "line2", "city", "province", "postcode"]
         if addressdata["line1"]:
             address.line1 = addressdata["line1"]
         if addressdata["line2"]:
@@ -37,24 +39,28 @@ def get_appointments_from_postal(postal: str, dose=1):
             loc.url = appointment["url"]
 
         for availability in appointment["vaccineAvailabilities"]:
+            doses = [1]
+            vaccine = "Unknown"
             if availability["tags"]:
                 print(availability["tags"])
                 tags = availability["tags"].split(',')
-                if "dose2" in tags:
-                    if dose == 1:
-                        continue
-                else:
-                    if dose == 2:
-                        continue
-            else:
-                if dose == 2:
+                if "2nd Dose" in tags:
+                    doses.append(2)
+                if "3rd Dose" in tags:
+                    doses.append(3)
+
+                for vax in vaccines:
+                    if vax in tags:
+                        vaccine = vax
+
+                if dose not in doses:
                     continue
+
             requirements = []
             reqdata = availability["requirements"]
             for requirement in reqdata:
                 requirements.append(Requirement(requirement["name"], requirement["description"]))
 
-            vaccine = availability["vaccine"]
             amount = availability["numberTotal"]
             date = datetime.datetime.strptime(availability["date"].split("T")[0], "%Y-%m-%d")
 
@@ -69,6 +75,6 @@ def get_appointments_from_postal(postal: str, dose=1):
                     seen = True
 
             if not seen:
-                vaxappointments.append(VaxAppointment(loc, requirements, vaccine, amount, [date]))
+                vaxappointments.append(VaxAppointment(loc, requirements, vaccine, amount, [date], doses))
 
     return vaxappointments if vaxappointments else None

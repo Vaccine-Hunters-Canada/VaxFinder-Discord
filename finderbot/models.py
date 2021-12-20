@@ -28,14 +28,15 @@ class Location:
 
 class VaxAppointment():
 
-    def __init__(self, location: Location, requirements: List[Requirement], vaccine: int, amount: int,
-                 dates: List[datetime.datetime]):
+    def __init__(self, location: Location, requirements: List[Requirement], vaccine: str, amount: int,
+                 dates: List[datetime.datetime], doses=[1]):
         self.location = location
         self.requirements = requirements
         self.vaccine = vaccine
         self.amount = amount
         self.dates = dates
-        self.vaccinecodes = {1: "Unknown", 3: "Pfizer", 4: "Moderna", 5: "AstraZeneca"}
+        self.doses = doses
+        #self.vaccinecodes = {1: "Unknown", 3: "Pfizer", 4: "Moderna", 5: "AstraZeneca"}
 
     def __eq__(self, other):
         if not isinstance(other, VaxAppointment):
@@ -51,8 +52,9 @@ class VaxAppointment():
         else:
             embed_color = 0
         embed = Embed(title=self.location.name, color=embed_color)
-        embed.description = "**Vaccine**\U0001F489: %s\n" % self.vaccinecodes[self.vaccine]
+        embed.description = "**Vaccine**\U0001F489: %s\n" % self.vaccine
         embed.description += "**Reported vaccines available (may not be accurate):** %d\n" % (self.amount)
+        embed.description += "**Dose #s available:** %s\n" % ", ".join([str(dosenum) for dosenum in self.doses])
         if self.requirements:
             embed.description += "**You may need to be:\n**"
             requirements = ["    -%s\n" % requirement.description for requirement in self.requirements]
