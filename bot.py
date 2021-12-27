@@ -7,7 +7,7 @@ from math import log
 from typing import List
 import pgeocode
 
-from finderbot.api import get_appointments_from_postal
+from API.vaxfinder import VaxFinderAPI
 from finderbot.models import VaxAppointment
 
 class VFClient(discord.Client):
@@ -70,6 +70,8 @@ dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=
 options.append(create_option(name="dose", description="Dose # you are looking for", option_type=4, required=True,
                              choices=dose_choices))
 
+API = VaxFinderAPI()
+
 
 @slash.slash(name="find", description="Find the closest available vaccine appointment, with the fewest requirements",
             options=options)
@@ -80,7 +82,7 @@ async def find(ctx, postal: str, dose: int):
         return
     await ctx.defer()
 
-    appointments = get_appointments_from_postal(postal, dose=dose)
+    appointments = API.get_appointments_from_postal(postal, dose=dose)
     await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
 
     if not appointments:
@@ -105,7 +107,7 @@ async def findall(ctx, postal:str, dose: int):
         return
     await ctx.defer()
 
-    appointments = get_appointments_from_postal(postal, dose=dose)
+    appointments = API.get_appointments_from_postal(postal, dose=dose)
 
     if not appointments:
         await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %
