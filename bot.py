@@ -59,7 +59,7 @@ def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
             currentDate = datetime.datetime.now()
             nextAppointmentDate = appointment.dates[0]
             deltaDays = (nextAppointmentDate - currentDate).days
-            dateScore = deltaDays*10
+            dateScore = deltaDays*2
         else:
             dateScore = 50
 
@@ -117,8 +117,8 @@ async def find(ctx, postal: str, dose: int):
 
 @slash.slash(name="findall", description="Find all vaccine appointments nearby and send via DM", options=options)
 async def findall(ctx, postal:str, dose: int):
-    if not (0 < len(postal) < 4):
-        await ctx.send("❗ <@%d>, please only enter the *first 3 digits* of your postal code!" % ctx.author.id,
+    if not (len(postal) == 3):
+        await ctx.send("❗ <@%d>, please enter the *first 3 digits* of your postal code!" % ctx.author.id,
                        delete_after=8.0)
         return
     await ctx.defer()
@@ -135,22 +135,10 @@ async def findall(ctx, postal:str, dose: int):
     await ctx.send("<@%d>, sending you available appointments via direct message!" % ctx.author.id,
                    delete_after=8.0)
     user = ctx.author
-    appointments_accessible = [appointment for appointment in appointments if len(appointment.requirements) == 0]
+    appointments_accessible = [appointment[0] for appointment in get_appointment_scores(postal, appointments)][:10]
     try:
-        if appointments_accessible:
-            await user.send(
-                "\U0001F537 **Here are locations with no known elgibility requirements (12+/18+, "
-                "may not be accurate - check yourself via phone or website):**")
-            for appointment in appointments_accessible:
-                await user.send(embed=appointment.format_to_embed())
-            if len(appointments_accessible) != len(appointments):
-                await user.send(
-                    "\U0001F536 **Here are all other available appointments (locations may show twice, as "
-                    "doses are allocated differently based on elgibility):**")
-
-            appointments = [appointment for appointment in appointments if appointment not in appointments_accessible]
-
-        for appointment in appointments:
+        await user.send("\U0001F537 Here's everything I've found for **%s**\n:" % postal)
+        for appointment in appointments_accessible:
             await user.send(embed=appointment.format_to_embed())
     except discord.errors.Forbidden:
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "

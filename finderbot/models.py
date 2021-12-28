@@ -53,7 +53,7 @@ class VaxAppointment():
         if color:
             embed_color = int(color, 16)
         else:
-            embed_color = 0
+            embed_color = int("ffffff", 16)
         embed = Embed(title=self.location.name, color=embed_color)
         embed.description = "**Vaccines**\U0001F489: %s\n" % ",".join(self.vaccines)
         embed.description += "**Reported vaccines available (may not be accurate):** %d\n" % (self.amount)

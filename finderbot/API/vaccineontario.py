@@ -57,7 +57,7 @@ class VaccineOntarioAPI(FinderAPI):
         gd = pgeocode.Nominatim("ca")
         postalData = gd.query_postal_code(postal)
         longitude, latitude = postalData.longitude, postalData.latitude
-        distance = 15
+        distance = 12
 
         clinics = self._get_VO_clinics()
         nearbyClinics = []
@@ -134,7 +134,4 @@ class VaccineOntarioAPI(FinderAPI):
             locatedAppointments.append(appointment)
 
         return locatedAppointments
-
-
-
 
