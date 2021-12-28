@@ -87,7 +87,7 @@ class VaccineOntarioAPI(FinderAPI):
             clinicAddress = [address.lstrip() for address in clinic["address"].split(",")] # some addresses are seperated by commas, and not commas followed by a space -_-
             try:
                 address.line1 = clinicAddress[0]
-                address.city = clinicAddress[1].split(" ")[0]
+                address.city = clinicAddress[1]
                 postalCode = None
 
                 if (len(clinicAddress[-1]) == 7) or (len(clinicAddress[-1]) == 6):
