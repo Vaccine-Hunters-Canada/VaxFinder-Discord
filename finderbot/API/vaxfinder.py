@@ -5,7 +5,7 @@ from finderbot.models import *
 from finderbot.API.api import FinderAPI
 
 
-vaccines = ["Pfizer", "Moderna"]
+vaccines = ["Pfizer", "Moderna", "AstraZeneca"]
 
 
 class VaxFinderAPI(FinderAPI):
@@ -45,7 +45,7 @@ class VaxFinderAPI(FinderAPI):
 
             for availability in appointment["vaccineAvailabilities"]:
                 doses = [1]
-                vaccine = "Unknown"
+                vaccine = ["Unknown"]
                 if availability["tags"]:
                     print(availability["tags"])
                     tags = availability["tags"].split(',')
