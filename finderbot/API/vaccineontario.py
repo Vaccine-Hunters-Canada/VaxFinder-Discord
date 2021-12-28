@@ -1,9 +1,7 @@
 from finderbot.models import *
 from finderbot.API.api import FinderAPI
 
-from google.cloud import firestore
-from google.oauth2 import service_account
-import keyring
+import requests
 import pgeocode
 import os
 import time
@@ -14,8 +12,6 @@ vaccineTypes = ["Pfizer", "Moderna", "J&J"]
 class VaccineOntarioAPI(FinderAPI):
     def __init__(self, ratelimit=10):
         super().__init__(ratelimit)
-        credentials = service_account.Credentials.from_service_account_file(keyring.get_password("VaxFinderDiscord", "VOKeyfile"))
-        self._database = firestore.Client(credentials=credentials)
 
     def _get_VO_clinics(self) -> list:
         try:
@@ -36,21 +32,26 @@ class VaccineOntarioAPI(FinderAPI):
                 with open("cache/%s" % cacheFile, "r") as f:
                     return json.load(f)
 
-        clinics_slot_ref = self._database.collection(u"clinic").where("slots_left", "!=", {})
-        clinics_slot = [clinic.to_dict() for clinic in clinics_slot_ref.stream()]
+        data = requests.get("https://firebasestorage.googleapis.com/v0/b/vaxhunterstoronto.appspot.com/o/clinics.json?alt=media").text
+        clinics = json.loads(data)["clinics"]
+        open_clinics = []
+        for clinic in clinics:
+            try:
+                if clinic["slots_left"] != {}:
+                    open_clinics.append(clinic)
+                    continue
+            except KeyError:
+                pass
+            try:
+                if (clinic["walkin_times"] != []) and (clinic["walkin_times"] != {}):
+                    open_clinics.append(clinic)
+            except KeyError:
+                pass
 
-        clinics_walkin_ref = self._database.collection(u"clinic").where("walkin_times", "!=", [])
-        clinics_walkin = [clinic.to_dict() for clinic in clinics_walkin_ref.stream()]
-
-
-        clinics = clinics_slot
-        for clinic in clinics_walkin:
-            if clinic not in clinics_slot:
-                clinics.append(clinic)
 
         with open("cache/VO-%d" % time.time(), "w") as f:
-            json.dump(clinics, f, default=str)
-        return clinics
+            json.dump(open_clinics, f, default=str)
+        return open_clinics
 
 
     def _appointments_from_postal(self, postal: str, dose=1):
