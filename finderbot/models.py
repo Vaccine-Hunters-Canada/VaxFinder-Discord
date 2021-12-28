@@ -49,7 +49,7 @@ class VaxAppointment():
 
 
     def format_to_embed(self):
-        color = tools.get_color_from_name(self.location.name)
+        color = tools.get_color_from_appointment(self)
         if color:
             embed_color = int(color, 16)
         else:
@@ -92,7 +92,7 @@ class VaxAppointment():
         if self.location.url:
             embed.description += "**Booking URL**: %s" % self.location.url
 
-        img = tools.get_logo_from_name(self.location.name)
+        img = tools.get_logo_from_appointment(self)
         if img:
             embed.set_thumbnail(url=img)
 

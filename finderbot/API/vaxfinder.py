@@ -47,7 +47,6 @@ class VaxFinderAPI(FinderAPI):
                 doses = [1]
                 vaccine = ["Unknown"]
                 if availability["tags"]:
-                    print(availability["tags"])
                     tags = availability["tags"].split(',')
                     if "2nd Dose" in tags:
                         doses.append(2)
