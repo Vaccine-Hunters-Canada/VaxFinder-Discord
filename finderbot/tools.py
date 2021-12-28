@@ -1,5 +1,4 @@
 import json
-from finderbot.models import VaxAppointment
 
 with open("finderbot/resources/logos.json", "r") as f:
     logo_data = f.read()
@@ -9,7 +8,7 @@ with open("finderbot/resources/colors.json", "r") as f:
     color_data = f.read()
 colors = json.loads(color_data)
 
-def get_logo_from_appointment(appointment: VaxAppointment):
+def get_logo_from_appointment(appointment):
     '''
     Finds the logo associated with a certain location name.
     :param name: The full name of a location.
@@ -26,7 +25,7 @@ def get_logo_from_appointment(appointment: VaxAppointment):
         if logo in name.lower():
             return logos[logo]
 
-def get_color_from_appointment(appointment: VaxAppointment):
+def get_color_from_appointment(appointment):
     '''
         Finds the color associated with a certain location name.
         :param name: The full name of a location.
