@@ -65,7 +65,7 @@ def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
 
 
         # Now we'll use some more magic equations to calculate score...
-        score = (1/300*(distance**3)) + score_supply + dateScore
+        score = (1/100*(distance**3)) + score_supply + dateScore
 
         appointments_scored.append((appointment, score))
 
@@ -137,7 +137,7 @@ async def findall(ctx, postal:str, dose: int):
     user = ctx.author
     appointments_accessible = [appointment[0] for appointment in get_appointment_scores(postal, appointments)][:10]
     try:
-        await user.send("\U0001F537 Here's everything I've found for **%s**:\n" % postal)
+        await user.send("\U0001F537 Here's everything I've found for **%s**:" % postal)
         for appointment in appointments_accessible:
             await user.send(embed=appointment.format_to_embed())
     except discord.errors.Forbidden:

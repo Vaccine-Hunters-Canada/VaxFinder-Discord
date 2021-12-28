@@ -130,7 +130,7 @@ class VaccineOntarioAPI(FinderAPI):
             if not walkin_dates:
                 walkin_dates = None
 
-            appointment = VaxAppointment(location, requirements, vaccines, amount_left, dates, [dose], walkin_dates)
+            appointment = VaxAppointment(location, requirements, vaccines, amount_left, sorted(dates), [dose], walkin_dates)
             locatedAppointments.append(appointment)
 
         return locatedAppointments
