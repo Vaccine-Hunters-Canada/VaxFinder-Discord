@@ -84,12 +84,26 @@ class VaccineOntarioAPI(FinderAPI):
 
             address = Region()
             address.province = "Ontario"
-            clinicAddress = clinic["address"].split(", ")
-            address.line1 = clinicAddress[0]
-            address.city = clinicAddress[1]
-            postal = " ".join(clinicAddress[-1].split(" ")[1:])
-            if postal:
-                address.postal = postal
+            clinicAddress = [address.lstrip() for address in clinic["address"].split(",")] # some addresses are seperated by commas, and not commas followed by a space -_-
+            try:
+                address.line1 = clinicAddress[0]
+                address.city = clinicAddress[1]
+                postalCode = None
+
+                if (len(clinicAddress[-1]) == 7) or (len(clinicAddress[-1]) == 6):
+                    if clinicAddress[-1] != "Ontario":
+                        postalCode = clinicAddress[-1]
+                elif len(clinicAddress[-1]) > 7: # province was thrown in
+                     postalCode = " ".join(clinicAddress[-1].split(" ")[-2:])
+                else: #it might just not be there
+                    pass
+
+                if postalCode:
+                    address.postal = postalCode
+
+            except IndexError:
+                address.line1 = "Unknown"
+
             try:
                 address.longitude = clinic["location"]["lng"]
                 address.latitude = clinic["latitude"]["lat"]
