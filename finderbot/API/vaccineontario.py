@@ -124,7 +124,7 @@ class VaccineOntarioAPI(FinderAPI):
                 for walkin_date in clinic["walkin_times"].keys():
                     formattedDate = datetime.datetime.strptime(walkin_date, "%Y-%m-%d")
                     walkin_dates[formattedDate] = clinic["walkin_times"][walkin_date]
-            except KeyError:
+            except (KeyError, AttributeError):
                 pass
 
             if not walkin_dates:
