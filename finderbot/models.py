@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional, Dict
 from discord import Embed
 import datetime
 
@@ -17,6 +17,8 @@ class Region:
     city: str = ""
     province: str = ""
     postal: str = ""
+    longitude: float = 0.0
+    latitude: float = 0.0
 
 @dataclass
 class Location:
@@ -28,13 +30,14 @@ class Location:
 
 class VaxAppointment():
 
-    def __init__(self, location: Location, requirements: List[Requirement], vaccine: str, amount: int,
-                 dates: List[datetime.datetime], doses=[1]):
+    def __init__(self, location: Location, requirements: List[Requirement], vaccines: List[str], amount: int,
+                 dates: List[datetime.datetime], doses=[1], walkinDates: Optional[Dict[datetime.datetime, str]]=None):
         self.location = location
         self.requirements = requirements
-        self.vaccine = vaccine
+        self.vaccines = vaccines
         self.amount = amount
         self.dates = dates
+        self.walkinDates = walkinDates
         self.doses = doses
         #self.vaccinecodes = {1: "Unknown", 3: "Pfizer", 4: "Moderna", 5: "AstraZeneca"}
 
@@ -52,11 +55,11 @@ class VaxAppointment():
         else:
             embed_color = 0
         embed = Embed(title=self.location.name, color=embed_color)
-        embed.description = "**Vaccine**\U0001F489: %s\n" % self.vaccine
+        embed.description = "**Vaccines**\U0001F489: %s\n" % ",".join(self.vaccines)
         embed.description += "**Reported vaccines available (may not be accurate):** %d\n" % (self.amount)
         embed.description += "**Dose #s available:** %s\n" % ", ".join([str(dosenum) for dosenum in self.doses])
         if self.requirements:
-            embed.description += "**You may need to be:\n**"
+            embed.description += "**Eligibility Requirements:\n**"
             requirements = ["    -%s\n" % requirement.description for requirement in self.requirements]
             for requirement in requirements:
                 embed.description += requirement
@@ -75,7 +78,14 @@ class VaxAppointment():
         if address.postal:
             embed.description += address.postal + "\n\n"
 
-        embed.description += "Dates available: %s\n\n" % "; ".join([date.strftime("%Y-%m-%d") for date in self.dates])
+        if self.walkinDates:
+            embed.description += "*This location allows walk-ins*\n"
+
+        if self.dates:
+            embed.description += "Dates available: %s\n\n" % "; ".join([date.strftime("%Y-%m-%d") for date in self.dates])
+        if self.walkinDates:
+            embed.description += "Times available for walk-ins: \n%s\n\n" % " \n".join(
+                ["%s: *%s*" % (date.strftime("%Y-%m-%d"), self.walkinDates[date]) for date in self.walkinDates.keys()])
 
         if self.location.phone:
             embed.description += "**Call**: %s\n" % self.location.phone

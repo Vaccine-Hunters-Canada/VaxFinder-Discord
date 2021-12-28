@@ -3,3 +3,4 @@ discord.py==1.7.2
 keyring==23.0.1
 requests==2.25.1
 pgeocode==0.3.0
+google-cloud-firestore==2.3.4

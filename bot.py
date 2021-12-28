@@ -1,13 +1,15 @@
 import discord
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option, create_choice
-import keyring
 import asyncio
-from math import log
+from math import log, isnan
 from typing import List
 import pgeocode
+import keyring
+import datetime
 
-from API.vaxfinder import VaxFinderAPI
+from finderbot.API.vaccineontario import VaccineOntarioAPI
+from finderbot.API.vaxfinder import VaxFinderAPI
 from finderbot.models import VaxAppointment
 
 class VFClient(discord.Client):
@@ -24,34 +26,46 @@ def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
     '''
     appointments_scored = []
     for appointment in appointments:
-        gd = pgeocode.GeoDistance("ca")
-        distance = gd.query_postal_code(origin, appointment.location.address.postal[:3])
-        if distance > 100:
-            continue
-        distance = 0
+        address = appointment.location.address
+        if address.postal:
+            gd = pgeocode.GeoDistance("ca")
+            distance = gd.query_postal_code(origin, address.postal)
+        elif address.longitude:
+            nm = pgeocode.Nominatim("ca")
+            query = nm.query_postal_code(origin)
+            longitude, latitude = query.longitude, query.latitude
+            clinicCoordinates = [address.longitude, address.latitude]
+            distance = pgeocode.haversine_distance([[longitude, latitude]], [[clinicCoordinates]])
+        else:
+            distance = 15
+
+        try:
+            if isnan(distance):
+                distance = 15
+        except TypeError:
+            distance = 15
+
 
         # Magic equation to modify score change based on # of vaccines left
         try:
-            score_supply = -(30*log((1/64)*appointment.amount - 2))
-            if score_supply > 0:
+            score_supply = -(10*log((1/64)*appointment.amount - 2))
+            if (score_supply > 0) or isnan(score_supply):
                 raise ValueError
         except ValueError:
             score_supply = 0
 
+
+        if appointment.dates:
+            currentDate = datetime.datetime.now()
+            nextAppointmentDate = appointment.dates[0]
+            deltaDays = (nextAppointmentDate - currentDate).days
+            dateScore = deltaDays*10
+        else:
+            dateScore = 50
+
+
         # Now we'll use some more magic equations to calculate score...
-        score = (1/900*(distance**3)) + score_supply
-
-        score = (1/900*(distance**3))
-
-        if len(appointment.requirements) > 0:
-            if len(appointment.requirements) == 1:
-                if appointment.requirements[0].name == "HotSpot": # This one doesn't really matter
-                    pass
-                else:
-                    score += 100
-            else:
-                score += 100
-
+        score = (1/300*(distance**3)) + score_supply + dateScore
 
         appointments_scored.append((appointment, score))
 
@@ -70,7 +84,7 @@ dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=
 options.append(create_option(name="dose", description="Dose # you are looking for", option_type=4, required=True,
                              choices=dose_choices))
 
-API = VaxFinderAPI()
+APIS = [VaccineOntarioAPI(), VaxFinderAPI()]
 
 
 @slash.slash(name="find", description="Find the closest available vaccine appointment, with the fewest requirements",
@@ -82,7 +96,9 @@ async def find(ctx, postal: str, dose: int):
         return
     await ctx.defer()
 
-    appointments = API.get_appointments_from_postal(postal, dose=dose)
+    appointments = APIS[0].get_appointments_from_postal(postal, dose=dose)
+    if not appointments:
+        appointments = APIS[1].get_appointments_from_postal(postal, dose=dose)
     await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
 
     if not appointments:
@@ -107,7 +123,9 @@ async def findall(ctx, postal:str, dose: int):
         return
     await ctx.defer()
 
-    appointments = API.get_appointments_from_postal(postal, dose=dose)
+    appointments = APIS[0].get_appointments_from_postal(postal, dose=dose)
+    if not appointments:
+        appointments = APIS[1].get_appointments_from_postal(postal, dose=dose)
 
     if not appointments:
         await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %

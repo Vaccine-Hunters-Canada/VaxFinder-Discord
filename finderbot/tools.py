@@ -1,4 +1,5 @@
 import json
+import pgeocode
 
 with open("finderbot/resources/logos.json", "r") as f:
     logo_data = f.read()
