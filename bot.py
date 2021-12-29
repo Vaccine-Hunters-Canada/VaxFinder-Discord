@@ -113,7 +113,7 @@ async def find(ctx, postal: str, dose: int):
                 embed=best_appointment.format_to_embed())
     except discord.errors.Forbidden:
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
-                 "Please enable this to use the bot." % ctx.author.id)
+                 "Please enable this to use the bot." % ctx.author.id, delete_after=8.0)
 
 @slash.slash(name="findall", description="Find all vaccine appointments nearby and send via DM", options=options)
 async def findall(ctx, postal:str, dose: int):
@@ -142,6 +142,6 @@ async def findall(ctx, postal:str, dose: int):
             await user.send(embed=appointment.format_to_embed())
     except discord.errors.Forbidden:
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
-                 "Please enable this to use the bot." % ctx.author.id)
+                 "Please enable this to use the bot." % ctx.author.id, delete_after=8.0)
 
 client.run(keyring.get_password("VaxFinderDiscord", "BotToken"))
