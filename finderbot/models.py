@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Dict
 from discord import Embed
 import datetime
+from collections import OrderedDict
 
 from finderbot import tools
 
@@ -36,8 +37,11 @@ class VaxAppointment():
         self.requirements = requirements
         self.vaccines = vaccines
         self.amount = amount
-        self.dates = dates
-        self.walkinDates = walkinDates
+        self.dates = sorted(dates)
+        if walkinDates:
+            self.walkinDates = OrderedDict(sorted(walkinDates.items()))
+        else:
+            self.walkinDates = None
         self.doses = doses
         #self.vaccinecodes = {1: "Unknown", 3: "Pfizer", 4: "Moderna", 5: "AstraZeneca"}
 
@@ -65,6 +69,9 @@ class VaxAppointment():
                 embed.description += requirement
             embed.description += '\n'
 
+        if self.walkinDates:
+            embed.description += "*This location allows walk-ins, times listed below*\n\n"
+
         embed.description += "**Address**:\n"
         address = self.location.address
         if address.line1:
@@ -77,9 +84,6 @@ class VaxAppointment():
             embed.description += address.province + "\n"
         if address.postal:
             embed.description += address.postal + "\n\n"
-
-        if self.walkinDates:
-            embed.description += "*This location allows walk-ins*\n"
 
         if self.dates:
             embed.description += "Dates available: %s\n\n" % "; ".join([date.strftime("%Y-%m-%d") for date in self.dates])
