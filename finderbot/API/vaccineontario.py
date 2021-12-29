@@ -5,6 +5,7 @@ import requests
 import pgeocode
 import os
 import time
+import datetime
 import json
 
 vaccineTypes = ["Pfizer", "Moderna", "J&J"]
@@ -129,7 +130,9 @@ class VaccineOntarioAPI(FinderAPI):
             amount_left = 1
             try:
                 for date in clinic["slots_left"].keys():
-                    dates.append(datetime.datetime.strptime(date, "%Y-%m-%d"))
+                    formattedDate = datetime.datetime.strptime(date, "%Y-%m-%d")
+                    if (formattedDate - datetime.datetime.now()).days >= -1:
+                        dates.append(formattedDate)
                     amount_left += clinic["slots_left"][date]
             except KeyError:
                 pass
@@ -138,7 +141,8 @@ class VaccineOntarioAPI(FinderAPI):
             try:
                 for walkin_date in clinic["walkin_times"].keys():
                     formattedDate = datetime.datetime.strptime(walkin_date, "%Y-%m-%d")
-                    walkin_dates[formattedDate] = clinic["walkin_times"][walkin_date]
+                    if (formattedDate - datetime.datetime.now()).days >= -1:
+                        walkin_dates[formattedDate] = clinic["walkin_times"][walkin_date]
             except (KeyError, AttributeError):
                 pass
 
