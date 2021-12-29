@@ -34,7 +34,7 @@ class VaccineOntarioAPI(FinderAPI):
                     return json.load(f)
 
         data = requests.get("https://firebasestorage.googleapis.com/v0/b/vaxhunterstoronto.appspot.com/o/clinics.json?alt=media").text
-        clinics = json.loads(data)["clinics"] + "pog"
+        clinics = json.loads(data)["clinics"]
         open_clinics = []
         for clinic in clinics:
             try:

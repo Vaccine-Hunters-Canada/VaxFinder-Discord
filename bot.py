@@ -15,8 +15,18 @@ from finderbot.models import VaxAppointment
 from finderbot import logging
 
 class VFClient(discord.Client):
+    def __init__(self):
+        super().__init__()
+        self.useCounter = 0
+
     async def on_ready(self):
         print('Logged on as', self.user)
+
+    @loop(seconds=3600)
+    async def logUses(self):
+        logging.log("Uses in the last hour: %d" % self.useCounter, "data")
+        self.useCounter = 0
+
 
 def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
     '''
@@ -116,6 +126,7 @@ async def find(ctx, postal: str, dose: int):
     except discord.errors.Forbidden:
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
                  "Please enable this to use the bot." % ctx.author.id, delete_after=8.0)
+    client.useCounter += 1
 
 @slash.slash(name="findall", description="Find all vaccine appointments nearby and send via DM", options=options)
 async def findall(ctx, postal:str, dose: int):
@@ -145,6 +156,7 @@ async def findall(ctx, postal:str, dose: int):
     except discord.errors.Forbidden:
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
                  "Please enable this to use the bot." % ctx.author.id, delete_after=8.0)
+    client.useCounter += 1
 
-
+client.logUses.start()
 client.run(keyring.get_password("VaxFinderDiscord", "BotToken"))

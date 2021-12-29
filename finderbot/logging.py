@@ -1,7 +1,7 @@
 import datetime
 
-errorlog = "errorlog.txt"
-datalog = "datalog.txt"
+errorlog = "logs/errorlog.txt"
+datalog = "logs/datalog.txt"
 
 def log(text: str, level: str):
     timestring = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%I %p %Z")
