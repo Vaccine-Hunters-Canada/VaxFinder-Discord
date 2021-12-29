@@ -1,6 +1,7 @@
 import discord
 from discord_slash import SlashCommand
 from discord_slash.utils.manage_commands import create_option, create_choice
+from discord.ext.tasks import loop
 import asyncio
 from math import log, isnan
 from typing import List
@@ -11,6 +12,7 @@ import datetime
 from finderbot.API.vaccineontario import VaccineOntarioAPI
 from finderbot.API.vaxfinder import VaxFinderAPI
 from finderbot.models import VaxAppointment
+from finderbot import logging
 
 class VFClient(discord.Client):
     async def on_ready(self):
@@ -143,5 +145,6 @@ async def findall(ctx, postal:str, dose: int):
     except discord.errors.Forbidden:
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
                  "Please enable this to use the bot." % ctx.author.id, delete_after=8.0)
+
 
 client.run(keyring.get_password("VaxFinderDiscord", "BotToken"))
