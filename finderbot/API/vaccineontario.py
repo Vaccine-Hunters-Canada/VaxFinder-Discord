@@ -127,11 +127,11 @@ class VaccineOntarioAPI(FinderAPI):
                 pass
 
             dates = []
-            amount_left = 1
+            amount_left = 0
             try:
                 for date in clinic["slots_left"].keys():
                     formattedDate = datetime.datetime.strptime(date, "%Y-%m-%d")
-                    if (formattedDate - datetime.datetime.now()).days >= -1:
+                    if ((formattedDate - datetime.datetime.now()).days >= -1) and (clinic["slots_left"][date] > 0):
                         dates.append(formattedDate)
                     amount_left += clinic["slots_left"][date]
             except KeyError:
@@ -148,6 +148,8 @@ class VaccineOntarioAPI(FinderAPI):
 
             if not walkin_dates:
                 walkin_dates = None
+                if amount_left == 0:
+                    continue
 
             appointment = VaxAppointment(location, requirements, vaccines, amount_left, dates, [dose], walkin_dates)
             locatedAppointments.append(appointment)
