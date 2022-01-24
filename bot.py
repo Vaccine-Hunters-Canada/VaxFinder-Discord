@@ -8,11 +8,14 @@ from typing import List
 import pgeocode
 import keyring
 import datetime
+import sys
 
 from finderbot.API.vaccineontario import VaccineOntarioAPI
 from finderbot.API.vaxfinder import VaxFinderAPI
 from finderbot.models import VaxAppointment
 from finderbot import logging
+
+CHANNELID = sys.argv[0]
 
 class VFClient(discord.Client):
     def __init__(self):

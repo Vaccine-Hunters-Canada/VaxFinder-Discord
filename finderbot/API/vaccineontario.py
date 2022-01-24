@@ -70,10 +70,13 @@ class VaccineOntarioAPI(FinderAPI):
             except KeyError:
                 clinic_coordinates = (0,0)
 
-            if pgeocode.haversine_distance([(longitude, latitude)], [clinic_coordinates]) < distance:
-                nearbyClinics.append(clinic)
-            elif (postal in clinic["address"]):
-                nearbyClinics.append(clinic)
+            try:
+                if pgeocode.haversine_distance([(longitude, latitude)], [clinic_coordinates]) < distance:
+                    nearbyClinics.append(clinic)
+                elif (postal in clinic["address"]):
+                    nearbyClinics.append(clinic)
+            except KeyError:
+                pass
 
         locatedAppointments = []
         for clinic in nearbyClinics:
