@@ -8,7 +8,7 @@ from typing import List
 import pgeocode
 import keyring
 import datetime
-import sys
+
 
 from finderbot.API.vaccineontario import VaccineOntarioAPI
 from finderbot.API.vaxfinder import VaxFinderAPI
@@ -83,8 +83,9 @@ def get_appointment_scores(origin: str, appointments: List[VaxAppointment]):
 
         appointments_scored.append((appointment, score))
 
-    appointments_sorted = sorted(appointments_scored, key=lambda x: x[1])
-    return appointments_sorted
+    if appointments_scored:
+        appointments_sorted = sorted(appointments_scored, key=lambda x: x[1])
+        return appointments_sorted
 
 
 client = VFClient()
@@ -98,7 +99,12 @@ dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=
 options.append(create_option(name="dose", description="Dose # you are looking for", option_type=4, required=True,
                              choices=dose_choices))
 
-APIS = [VaccineOntarioAPI(), VaxFinderAPI()]
+async def find_appointments(postal: str, dose: int):
+    APIS = [VaccineOntarioAPI(), VaxFinderAPI()]
+    appointments = APIS[0].get_appointments_from_postal(postal, dose=dose)
+    if not appointments:
+        appointments = APIS[1].get_appointments_from_postal(postal, dose=dose)
+    return [appointment[0] for appointment in get_appointment_scores(postal, appointments)]
 
 
 @slash.slash(name="find", description="Find the closest available vaccine appointment, with the fewest requirements",
@@ -108,57 +114,52 @@ async def find(ctx, postal: str, dose: int):
         await ctx.send("❗ <@%d>, please only enter the *first 3 digits* of your postal code!" % ctx.author.id,
                        delete_after=8.0)
         return
-    await ctx.defer()
+    await ctx.defer(hidden=True)
 
-    appointments = APIS[0].get_appointments_from_postal(postal, dose=dose)
-    if not appointments:
-        appointments = APIS[1].get_appointments_from_postal(postal, dose=dose)
-    await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
-
-    if not appointments:
-        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %
-                       (ctx.author.id, postal), delete_after=8.0)
-        return
-
-    best_appointment = get_appointment_scores(postal, appointments)[0][0]
-    await ctx.send("**<@%d>, DMing the best appointment!**" % ctx.author.id, delete_after=8.0)
-    try:
-        await ctx.author.send("**<@%d>, Here is the closest and most accessible appointment found**:" % ctx.author.id,
-                embed=best_appointment.format_to_embed())
-    except discord.errors.Forbidden:
-        await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
-                 "Please enable this to use the bot." % ctx.author.id, delete_after=8.0)
     client.useCounter += 1
+
+    try:
+        best_appointment = (await find_appointments(postal, dose))[0]
+        await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
+        await ctx.send("**<@%d>, DMing the best appointment!**" % ctx.author.id, hidden=True)
+        try:
+            await ctx.author.send("**<@%d>, Here is the closest and most accessible appointment found**:" % ctx.author.id,
+                              embed=best_appointment.format_to_embed())
+        except discord.errors.Forbidden:
+            await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
+                       "Please enable this to use the bot." % ctx.author.id, hidden=True)
+
+    except IndexError:
+        await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %
+                       (ctx.author.id, postal), hidden=True)
+        return
 
 @slash.slash(name="findall", description="Find all vaccine appointments nearby and send via DM", options=options)
 async def findall(ctx, postal:str, dose: int):
     if not (len(postal) == 3):
         await ctx.send("❗ <@%d>, please enter the *first 3 digits* of your postal code!" % ctx.author.id,
-                       delete_after=8.0)
+                    hidden=True)
         return
-    await ctx.defer()
+    await ctx.defer(hidden=True)
 
-    appointments = APIS[0].get_appointments_from_postal(postal, dose=dose)
-    if not appointments:
-        appointments = APIS[1].get_appointments_from_postal(postal, dose=dose)
+    client.useCounter += 1
 
-    if not appointments:
+    appointments_accessible = (await find_appointments(postal, dose))[:10]
+
+    if not appointments_accessible:
         await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %
-                       (ctx.author.id, postal), delete_after=8.0)
+                       (ctx.author.id, postal), delete_after=8.0, hidden=True)
         return
 
-    await ctx.send("<@%d>, sending you available appointments via direct message!" % ctx.author.id,
-                   delete_after=8.0)
+    await ctx.send("<@%d>, sending you available appointments via direct message!" % ctx.author.id, hidden=True)
     user = ctx.author
-    appointments_accessible = [appointment[0] for appointment in get_appointment_scores(postal, appointments)][:10]
     try:
         await user.send("\U0001F537 Here's everything I've found for **%s**:" % postal)
         for appointment in appointments_accessible:
             await user.send(embed=appointment.format_to_embed())
     except discord.errors.Forbidden:
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
-                 "Please enable this to use the bot." % ctx.author.id, delete_after=8.0)
-    client.useCounter += 1
+                 "Please enable this to use the bot." % ctx.author.id, hidden=True)
 
 client.logUses.start()
 client.run(keyring.get_password("VaxFinderDiscord", "BotToken"))
