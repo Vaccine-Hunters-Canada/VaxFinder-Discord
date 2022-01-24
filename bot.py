@@ -15,7 +15,6 @@ from finderbot.API.vaxfinder import VaxFinderAPI
 from finderbot.models import VaxAppointment
 from finderbot import logging
 
-CHANNELID = sys.argv[0]
 
 class VFClient(discord.Client):
     def __init__(self):
