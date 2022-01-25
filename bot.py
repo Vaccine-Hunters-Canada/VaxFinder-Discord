@@ -161,5 +161,12 @@ async def findall(ctx, postal:str, dose: int):
         await ctx.send("<@%d>, you've disabled DMs from server members, so no appointments can be sent. "
                  "Please enable this to use the bot." % ctx.author.id, hidden=True)
 
+@client.event
+async def on_slash_command_error(ctx, e):
+
+    await ctx.send("‼ <@%d> **An error occured while trying to process your request. " 
+             "Please try again. If this continues, please ping or message the developer and share the text below:**"
+             % ctx.author.id, embed=discord.Embed(title="Error Details", description="```%s```" % repr(e)), hidden=True)
+
 client.logUses.start()
 client.run(keyring.get_password("VaxFinderDiscord", "BotToken"))
