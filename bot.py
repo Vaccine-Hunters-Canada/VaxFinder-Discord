@@ -99,17 +99,21 @@ dose_choices = [create_choice(name="1", value=1), create_choice(name="2", value=
 options.append(create_option(name="dose", description="Dose # you are looking for", option_type=4, required=True,
                              choices=dose_choices))
 
-async def find_appointments(postal: str, dose: int):
+vaccine_choices = [create_choice(name="Pfizer", value="Pfizer"), create_choice(name="Moderna", value="Moderna")]
+options.append(create_option(name="vaccine", description="OPTIONAL: The vaccine type to filter by - will return results"
+                             " ONLY if they have this type", option_type=3, choices=vaccine_choices, required=False))
+
+async def find_appointments(postal: str, dose: int, vaccine=None):
     APIS = [VaccineOntarioAPI(), VaxFinderAPI()]
-    appointments = APIS[0].get_appointments_from_postal(postal, dose=dose)
+    appointments = APIS[0].get_appointments_from_postal(postal, dose=dose, vaccine=vaccine)
     if not appointments:
-        appointments = APIS[1].get_appointments_from_postal(postal, dose=dose)
+        appointments = APIS[1].get_appointments_from_postal(postal, dose=dose, vaccine=vaccine)
     return [appointment[0] for appointment in get_appointment_scores(postal, appointments)]
 
 
 @slash.slash(name="find", description="Find the closest available vaccine appointment, with the fewest requirements",
             options=options)
-async def find(ctx, postal: str, dose: int):
+async def find(ctx, postal: str, dose: int, vaccine=None):
     if not (0 < len(postal) < 4):
         await ctx.send("❗ <@%d>, please only enter the *first 3 digits* of your postal code!" % ctx.author.id,
                        delete_after=8.0)
@@ -119,7 +123,7 @@ async def find(ctx, postal: str, dose: int):
     client.useCounter += 1
 
     try:
-        best_appointment = (await find_appointments(postal, dose))[0]
+        best_appointment = (await find_appointments(postal, dose, vaccine))[0]
         await asyncio.sleep(3) # Ensures that we wait >3 seconds before sending, as to not cause issues with ctx.defer
         await ctx.send("**<@%d>, DMing the best appointment!**" % ctx.author.id, hidden=True)
         try:
@@ -135,7 +139,7 @@ async def find(ctx, postal: str, dose: int):
         return
 
 @slash.slash(name="findall", description="Find all vaccine appointments nearby and send via DM", options=options)
-async def findall(ctx, postal:str, dose: int):
+async def findall(ctx, postal:str, dose: int, vaccine=None):
     if not (len(postal) == 3):
         await ctx.send("❗ <@%d>, please enter the *first 3 digits* of your postal code!" % ctx.author.id,
                     hidden=True)
@@ -144,7 +148,7 @@ async def findall(ctx, postal:str, dose: int):
 
     client.useCounter += 1
 
-    appointments_accessible = (await find_appointments(postal, dose))[:10]
+    appointments_accessible = (await find_appointments(postal, dose, vaccine))[:10]
 
     if not appointments_accessible:
         await ctx.send("**Sorry <@%d> - no appointments were found near your postal code (%s)!**" %
@@ -163,7 +167,6 @@ async def findall(ctx, postal:str, dose: int):
 
 @client.event
 async def on_slash_command_error(ctx, e):
-
     await ctx.send("‼ <@%d> **An error occured while trying to process your request. " 
              "Please try again. If this continues, please ping or message the developer and share the text below:**"
              % ctx.author.id, embed=discord.Embed(title="Error Details", description="```%s```" % repr(e)), hidden=True)

@@ -12,7 +12,7 @@ class VaxFinderAPI(FinderAPI):
     def __init__(self, ratelimit=10):
         super().__init__(ratelimit)
 
-    def _appointments_from_postal(self, postal: str, dose=1):
+    def _appointments_from_postal(self, postal: str, dose=1, vaccine=None):
         '''
         Finds appointments, using the VaxFinder API, near a postal code.
         :param postal: The first 3 letters of a postal code as a string.
@@ -45,7 +45,7 @@ class VaxFinderAPI(FinderAPI):
 
             for availability in appointment["vaccineAvailabilities"]:
                 doses = [1]
-                vaccine = ["Unknown"]
+                vaccineType = ["Unknown"]
                 if availability["tags"]:
                     tags = availability["tags"].split(',')
                     if "2nd Dose" in tags:
@@ -55,10 +55,13 @@ class VaxFinderAPI(FinderAPI):
 
                     for vax in vaccines:
                         if vax in tags:
-                            vaccine = [vax]
+                            vaccineType = [vax]
 
                     if dose not in doses:
                         continue
+                    if vaccine:
+                        if vaccineType != [vaccine]:
+                            continue
 
                 requirements = []
                 reqdata = availability["requirements"]
@@ -79,6 +82,6 @@ class VaxFinderAPI(FinderAPI):
                         seen = True
 
                 if not seen:
-                    vaxappointments.append(VaxAppointment(loc, requirements, vaccine, amount, [date], doses))
+                    vaxappointments.append(VaxAppointment(loc, requirements, vaccineType, amount, [date], doses))
 
         return vaxappointments if vaxappointments else None

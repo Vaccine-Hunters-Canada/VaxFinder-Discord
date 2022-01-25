@@ -8,7 +8,7 @@ import time
 import datetime
 import json
 
-vaccineTypes = ["Pfizer", "Moderna", "J&J"]
+vaccineTypes = ["Pfizer", "Moderna", "AstraZeneca"]
 
 class VaccineOntarioAPI(FinderAPI):
     def __init__(self, ratelimit=10):
@@ -55,7 +55,7 @@ class VaccineOntarioAPI(FinderAPI):
         return open_clinics
 
 
-    def _appointments_from_postal(self, postal: str, dose=1):
+    def _appointments_from_postal(self, postal: str, dose=1, vaccine=None):
         gd = pgeocode.Nominatim("ca")
         postalData = gd.query_postal_code(postal)
         longitude, latitude = postalData.longitude, postalData.latitude
@@ -83,6 +83,9 @@ class VaccineOntarioAPI(FinderAPI):
             try:
                 if dose != clinic["dose_number"]:
                     continue
+                if vaccine:
+                    if clinic["vaccineType"] != vaccine:
+                        continue
             except KeyError:
                 continue
 
@@ -118,9 +121,9 @@ class VaccineOntarioAPI(FinderAPI):
             location.url = clinic["registration_link"]
 
             vaccines = []
-            for vaccine in vaccineTypes:
-                if vaccine in clinic["vaccineType"]:
-                    vaccines.append(vaccine)
+            for vaccineType in vaccineTypes:
+                if vaccineType in clinic["vaccineType"]:
+                    vaccines.append(vaccineType)
 
             requirements = []
             try:
